@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	string desc;
 	CalendarEvent *ev;
 	int n;
-	const int BIG_TEST = 13;
+	const int BIG_TEST = 1000;
 	bool munchLine;
 
 	while ((inst = cin.get()) != 'Q')
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 			double  duration;
 			start = clock();
 			for (i = 0; i < BIG_TEST; i++) {
-				myCalendar.insert(new CalendarEvent(rand(), i, "test"));
+				myCalendar.insert(new CalendarEvent(rand(), 2, "test"));
 			};
 			finish = clock();
 			duration = (double)(finish - start) / CLOCKS_PER_SEC;
