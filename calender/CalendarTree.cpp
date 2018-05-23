@@ -1,10 +1,10 @@
 #include "CalendarTree.h"
-
+int check = 0;
+int test = 0;
 CalendarEvent * CalendarTree::eventAt(time_t time)
 {
-	Node* temp = treeRoot;
+	Node* temp = treeRoot->getMiddle();
 	CalendarEvent* tempEvent;
-	//while (!(temp->getLeft()->isLeaf) || !(temp->getMiddle()->isLeaf) || !(temp->getRight()->isLeaf))
 	while(!temp->isLeaf())
 	{
 		if (temp->getMin2() > time)
@@ -28,88 +28,28 @@ CalendarEvent * CalendarTree::eventAt(time_t time)
 	return nullptr;
 }
 
-//CalendarEvent * CalendarTree::eventAfter(time_t time)
-//{	
-//	Node* temp = treeRoot;
-//	Node* parent = nullptr;
-//	CalendarEvent* tempEvent;
-//	bool foundParent = false;
-//	bool found = false;
-//	while (!found)
-//	{
-//		while (!temp->isLeaf())
-//		{
-//			foundParent = false;
-//			if (temp->getMin2() > time)
-//				temp = temp->getLeft();
-//			else if (temp->getMin2() <= time)
-//			{
-//				if (temp->getMin3() != NULL)
-//				{
-//					if (time < temp->getMin3())
-//						temp = temp->getMiddle();
-//					else
-//						temp = temp->getRight();
-//				}
-//				else
-//					temp = temp->getMiddle();
-//			}
-//		}
-//		tempEvent = temp->getEvent();
-//		if (tempEvent->getStartTime() >= time)
-//			return tempEvent;
-//		else if (tempEvent->getStartTime() == NULL)
-//			return nullptr;
-//		else
-//		{
-//			while (!foundParent)
-//			{
-//				if (temp->isLeaf())
-//					parent = temp->findParent(tempEvent->getStartTime(), treeRoot);
-//				else
-//					parent = parent->findParent(temp->getMin2(), treeRoot);
-//				if (parent == nullptr)
-//					return nullptr;
-//				else if (parent->getLeft() == temp)
-//				{
-//					if (parent->getMiddle() != NULL)
-//					{
-//						temp = parent->getMiddle();
-//						foundParent = true;
-//					}
-//					else
-//						temp = parent;
-//				}
-//				else if (parent->getMiddle() == temp)
-//				{
-//					if (parent->getRight() != NULL)
-//					{
-//						temp = parent->getRight();
-//						foundParent = true;
-//					}
-//					else
-//						temp = parent;
-//				}
-//				else
-//					temp = parent;
-//			}
-//		}
-//	}
-//	return nullptr;
-//}
 CalendarEvent * CalendarTree::eventAfter(time_t time)
 {
 	Node* leafParent = nullptr;
 	bool found = false;
 	Node* temp = nullptr;
 	leafParent = leafParent->findParent(time, treeRoot->getMiddle());
-	if (leafParent->getLeft()->getEvent()->getStartTime() == time)
-		return leafParent->getMiddle()->getEvent();
-	else if (leafParent->getMiddle()->getEvent()->getStartTime() == time)
+	if (leafParent->getLeft()->getEvent()->getStartTime() >= time)
+		return leafParent->getLeft()->getEvent();
+	else if (leafParent->getLeft()->getEvent()->getStartTime() <= time)
 	{
-		if (leafParent->getRight() != NULL)
-			return leafParent->getRight()->getEvent();
-	}//assuming the afterevent is in the right leaf or in the right node
+		if (leafParent->getMiddle()->getEvent()->getStartTime() <= time)
+		{
+			if (leafParent->getMiddle()->getEvent()->getStartTime() == time)
+				return leafParent->getMiddle()->getEvent();
+			else if (leafParent->getRight() != NULL)
+				if (leafParent->getRight()->getEvent()->getStartTime() > time)
+					return leafParent->getRight()->getEvent();
+		}
+		else 
+			return leafParent->getMiddle()->getEvent();
+	}
+	//assuming the afterevent is in the right leaf or in the right node
 	temp = leafParent->getParent();
 	while (!found)
 	{
@@ -129,8 +69,11 @@ CalendarEvent * CalendarTree::eventAfter(time_t time)
 }
 CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 {
+	
 	time_t timeToInsert = eventToInsert->getStartTime();
 	Node* firstParent = nullptr;
+	if (test < timeToInsert)
+		test = timeToInsert;
 	Node* newNode = new Node;
 	Node* newNodeSplited = nullptr;
 	Node* temp = nullptr;
@@ -171,6 +114,20 @@ CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 	}
 	else
 	{
+		CalendarEvent* checkExistsEvent = eventAt(eventToInsert->getStartTime());
+		if (checkExistsEvent)//checking if there is no other event at the same time.
+			if (checkExistsEvent->getDuration() + checkExistsEvent->getStartTime() != eventToInsert->getStartTime())
+			{
+				check++;
+				return nullptr;
+			}
+		CalendarEvent* checkExistsEventAfter = eventAfter(eventToInsert->getStartTime());
+		if (checkExistsEventAfter)
+			if (eventToInsert->getStartTime() + eventToInsert->getDuration() > checkExistsEventAfter->getStartTime())
+			{
+				check++;
+					return nullptr;
+			}
 		parent = parent->findParent(timeToInsert, treeRoot->getMiddle());
 		firstParent = parent;
 		if (!temp->insert(newNode, parent)) // Need to split node

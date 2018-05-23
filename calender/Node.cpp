@@ -12,7 +12,7 @@ Node * Node::findParent(time_t time,Node* root)
 			parent = root;
 			root = root->left;
 		}
-		else if (root->min2 < time && (root->min3 > time || root->min3 == 0))
+		else if (root->min2 <= time && (root->min3 > time || root->min3 == 0))
 		{
 			parent = root;
 			root = root->middle;
@@ -119,13 +119,20 @@ void Node::updateIndex(Node * newNode)
 	Node* parent = newNode->parent;
 	do
 	{
-		parent->min1 = findMin(parent->left);
-		parent->min2 = findMin(parent->middle);
-		if (parent->min3 != 0)
-			parent->min3 = findMin(parent->right);
+		if (!temp->isLeaf())
+		{
+			temp->min1 = findMin(temp->left);
+			temp->min2 = findMin(temp->middle);
+			if (temp->min3 != 0)
+				temp->min3 = findMin(temp->right);
+		}
 		temp = parent;
-		parent = parent->parent;
+		parent = parent->parent; 
 	} while (temp != parent);
+	parent->min1 = findMin(parent->left);
+	parent->min2 = findMin(parent->middle);
+	if (parent->min3 != 0)
+		parent->min3 = findMin(parent->right);
 }
 
 time_t Node::findMin(Node * nodeToSearch)
@@ -185,21 +192,6 @@ bool Node::insert(Node * newNode, Node * parentNode)
 	
 		return true;
 	}
-	//else if (newEventTime < parentNode->min2)
-	//{
-	//	parentNode->right = parentNode->middle;
-	//	parentNode->middle = newNode;
-	//	parentNode->min3 = parentNode->min2;
-	//	parentNode->min2 = newEventTime;
-	//	return true;
-	//}
-	//else if (newEventTime > parentNode->min2)
-	//{
-	//	parentNode->right = newNode;
-	//	parentNode->min3 = newEventTime;
-	//	return true;
-
-	//}
 	else
 	{
 		parentNode->right = newNode;
