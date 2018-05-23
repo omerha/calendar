@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	string desc;
 	CalendarEvent *ev;
 	int n;
-	const int BIG_TEST = 1000;
+	const int BIG_TEST = 10;
 	bool munchLine;
 
 	while ((inst = cin.get()) != 'Q')
