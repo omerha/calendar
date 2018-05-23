@@ -29,6 +29,22 @@ Node * Node::findParent(time_t time,Node* root)
 	return nullptr;
 }
 
+int Node::numberOfChildren()
+{
+	int res = 0;
+
+	if (this->getRight() != nullptr)
+		res = 3;
+
+	else if (this->getMiddle() != nullptr)
+		res = 2;
+	else
+		res = 1;
+
+	return res;
+
+}
+
 Node * Node::splitNodes(Node * fullNode, Node * newNode)
 {
 	Node* splitNode = new Node;

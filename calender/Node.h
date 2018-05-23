@@ -40,7 +40,9 @@ public:
 	void updateIndex(Node* newNode);
 	time_t findMin(Node* nodeToSearch);
 	void print(Node* nodeToPrint);
-	
+	int  numberOfChildren();
+
+
 	//Node* find();
 	bool insert(Node* newNode,Node* parentNode);
 	//void delete();

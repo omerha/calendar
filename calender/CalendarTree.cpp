@@ -159,9 +159,134 @@ void CalendarTree::recInsert(Node * newNode, Node * parent)
 {
 }
 
+
 CalendarEvent* CalendarTree::deleteFirst()
 {
-	return nullptr;
+	Node * parent = treeRoot->getMiddle();
+	Node* child = treeRoot->getMiddle();
+	CalendarEvent*res = nullptr;
+
+	if (!this->isEmpty())
+	{
+		while (!child->isLeaf())
+		{
+			parent = child;
+			child = child->getLeft();
+		}
+
+		res = child->getEvent();
+		free(child);
+		parent->setLeft(nullptr);
+
+		if (parent->numberOfChildren() == 2)
+		{
+			organize2ChildrenLeftInNode(parent);//only update min 2,3. the removed node allways will be the left. 
+												//so only min 2 bacome min 3	
+		}
+
+		else//left 1 children
+		{
+			if (parent == treeRoot)
+			{
+				if (!parent->getMiddle()->isLeaf())
+				{
+					treeRoot = parent->getMiddle();
+					free(parent);
+				}
+
+				else//in case the middle sub tree in the middle of the root is leaf we need to set the middle child to be left child
+				{
+					parent->setLeft(parent->getMiddle());
+					parent->setMiddle(nullptr);
+				}
+			}
+			else if (parent->getParent()->getMiddle()->numberOfChildren() == 3)//in case the cosin have 3 children
+			{
+				deliverLeftChildOfCosinAndUpdateMin(parent);//deliver the left child of cosin and update min 2,3
+				updateMinUpTo(parent);
+			}
+
+			else
+			{
+				deliverChildToCosinAndUpdateMin(child);//*TODO* maybe we need also min 1 
+				parent->setMiddle(nullptr);
+				deleteFirst();
+			}
+		}
+	}
+	return res;
+}
+
+void CalendarTree::organize2ChildrenLeftInNode(Node* parent)
+{
+	if (parent->getLeft() == nullptr)
+	{
+		parent->setLeft(parent->getMiddle());
+		parent->setMiddle(parent->getRight());
+		parent->setMin1(parent->getMin2());
+		parent->setMin2(parent->getMin3());
+		parent->setMin3(-1);
+
+	}
+
+	else if (parent->getMiddle() == nullptr)
+	{
+		parent->setMiddle(parent->getRight());
+		parent->setMin2(parent->getMin3());
+		parent->setMin3(-1);
+	}
+
+	else
+	{
+		parent->setMin3(-1);
+	}
+
+	parent->setRight(nullptr);
+}
+
+void CalendarTree::deliverLeftChildOfCosinAndUpdateMin(Node * parent)
+{
+	Node * nodeThatGetNewChild = parent;
+	Node * cosin = parent->getParent()->getMiddle();
+	Node*ChildToTake = cosin->getLeft();
+
+	nodeThatGetNewChild->setRight(ChildToTake);
+
+
+	organize2ChildrenLeftInNode(cosin);
+	organize2ChildrenLeftInNode(nodeThatGetNewChild);
+}
+
+
+
+void CalendarTree::deliverChildToCosinAndUpdateMin(Node*child)
+{
+	Node*parent = child->getParent();
+	Node*cosin = parent->getMiddle();
+
+	cosin->setMin3(cosin->getMin2());
+	cosin->setMin2(cosin->getMin1());
+	cosin->setRight(cosin->getMiddle());
+	cosin->setMiddle(cosin->getLeft());
+	cosin->setLeft(child);
+
+	if (child->isLeaf())
+		cosin->setMin1(child->getEvent()->getStartTime());
+
+	else
+		cosin->setMin1(child->getMin1());
+}
+
+void CalendarTree::updateMinUpTo(Node * node)
+{
+	while (node != nullptr)//if there is no function "get parent", need to change it 
+	{
+		node->setMin1(node->getLeft()->getMin1());
+		node->setMin2(node->getMiddle()->getMin1());
+		node->setMin3(node->getRight()->getMin1());
+
+		node = node->getParent();
+	}
 }
 
 void CalendarTree::printSorted()

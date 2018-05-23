@@ -21,6 +21,10 @@ public:
 	void recInsert(Node* newNode,Node* parent);
 	CalendarEvent* deleteFirst();
 	void printSorted();
+	void organize2ChildrenLeftInNode(Node* parent);
+	void deliverLeftChildOfCosinAndUpdateMin(Node * parent);
+	void deliverChildToCosinAndUpdateMin(Node*child);
+	void updateMinUpTo(Node * node);
 	int numBefore(time_t time);
 
 };
