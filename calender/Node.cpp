@@ -2,15 +2,27 @@
 
 Node * Node::findParent(time_t time,Node* root)
 {
-	Node* parent;
+	Node* parent = nullptr;
+	time_t tempMin1 = NULL;
+	bool foundChild = false;
 	while (root->left != nullptr || root->right != nullptr || root->middle != nullptr)
 	{
-
-	
+		foundChild = false;
 		if (root->min2 > time)
 		{
-			parent = root;
-			root = root->left;
+			tempMin1 = root->getMiddle()->getMin1();
+			if(tempMin1!=NULL)
+				if (tempMin1 < time)
+				{
+					parent = root;
+					root = root->middle;
+					foundChild = true;
+				}
+			if (!foundChild)
+			{
+				parent = root;
+				root = root->left;
+			}
 		}
 		else if (root->min2 <= time && (root->min3 > time || root->min3 == 0))
 		{
