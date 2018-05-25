@@ -1,40 +1,40 @@
 #include "Node.h"
 
 Node * Node::findParent(time_t time,Node* root)
-{
+{//This function finds the leaf's parent.
 	Node* parent = nullptr;
 	time_t tempMin1 = NULL;
 	bool foundChild = false;
-	while (root->left != nullptr || root->right != nullptr || root->middle != nullptr)
+	while (root->left != nullptr || root->right != nullptr || root->middle != nullptr)//while we are not in leaf.
 	{
 		foundChild = false;
 		if (root->min2 > time)
 		{
 			tempMin1 = root->getMiddle()->getMin1();
 			if(tempMin1!=NULL)
-				if (tempMin1 < time)
+				if (tempMin1 < time)//min1 indicates the most small leaf, so we'll go middle if we are bigger
 				{
 					parent = root;
 					root = root->middle;
 					foundChild = true;
 				}
-			if (!foundChild)
+			if (!foundChild)//else we'll go left
 			{
 				parent = root;
 				root = root->left;
 			}
 		}
 		else if (root->min2 <= time && (root->min3 > time || root->min3 == 0))
-		{
+		{//If we are bigger than min2 and smaller than min3 or min3 is empty we go middle
 			parent = root;
 			root = root->middle;
 		}
 		else
-		{
+		{//else go right
 			parent = root;
 			root = root->right;
 		}
-		if (root->isLeaf())
+		if (root->isLeaf())//We return the parent once the root reaches to leaf.
 			return parent;
 	}
 
@@ -58,7 +58,8 @@ int Node::numberOfChildren()
 }
 
 Node * Node::splitNodes(Node * fullNode, Node * newNode)
-{
+{//This function receives 2 nodes, one with 1 leaf and one with 3 leaves 
+	//and converts them to 2 nodes with 2 leaves each.
 	Node* splitNode = new Node;
 	splitNode->parent = fullNode->parent;
 	time_t newEventTime;
@@ -120,7 +121,7 @@ Node * Node::splitNodes(Node * fullNode, Node * newNode)
 }
 
 Node * Node::newRoot(Node * first, Node * second)
-{
+{//This function creates new root to the tree.
 	Node* newRoot = new Node;
 	if (first->min1 < second->min1)
 	{
@@ -164,7 +165,7 @@ void Node::updateIndex(Node * newNode)
 }
 
 time_t Node::findMin(Node * nodeToSearch)
-{
+{//Finds the most left leaf.
 	Node* temp = nodeToSearch;
 	while (!temp->isLeaf())
 	{

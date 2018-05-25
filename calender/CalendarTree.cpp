@@ -1,17 +1,16 @@
 #include "CalendarTree.h"
-int check = 0;
-int test = 0;
+
 CalendarEvent * CalendarTree::eventAt(time_t time)
 {
-	Node* temp = treeRoot->getMiddle();
+	Node* temp = treeRoot->getMiddle();//getting the tree's root
 	CalendarEvent* tempEvent;
-	while(!temp->isLeaf())
+	while(!temp->isLeaf())//going down the tree
 	{
-		if (temp->getMin2() > time)
+		if (temp->getMin2() > time)//case key is lower than min2 we go left.
 			temp = temp->getLeft();
 		else if (temp->getMin2() <= time)
 		{
-			if (temp->getMin3() != NULL)
+			if (temp->getMin3() != NULL)//In case key is higher than min 2 we check if min3 exists and choose to go middle or right.
 			{
 				if (time < temp->getMin3())
 					temp = temp->getMiddle();
@@ -23,7 +22,7 @@ CalendarEvent * CalendarTree::eventAt(time_t time)
 		}	
 	}
 	tempEvent = temp->getEvent();
-	if (tempEvent->getStartTime() <= time && time <= (tempEvent->getStartTime() + tempEvent->getDuration()))
+	if (tempEvent->getStartTime() <= time && time <= (tempEvent->getStartTime() + tempEvent->getDuration()))//Checking if the event is during the requested time.
 		return tempEvent;
 	return nullptr;
 }
@@ -33,7 +32,7 @@ CalendarEvent * CalendarTree::eventAfter(time_t time)
 	Node* leafParent = nullptr;
 	bool found = false;
 	Node* temp = nullptr;
-	leafParent = leafParent->findParent(time, treeRoot->getMiddle());
+	leafParent = treeRoot->getMiddle()->findParent(time, treeRoot->getMiddle());//Looking for the node the event would have been, than we will search for the higher key.
 	if (leafParent->getLeft()->getEvent()->getStartTime() >= time)
 		return leafParent->getLeft()->getEvent();
 	else if (leafParent->getLeft()->getEvent()->getStartTime() <= time)
@@ -69,11 +68,8 @@ CalendarEvent * CalendarTree::eventAfter(time_t time)
 }
 CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 {
-	
 	time_t timeToInsert = eventToInsert->getStartTime();
 	Node* firstParent = nullptr;
-	if (test < timeToInsert)
-		test = timeToInsert;
 	Node* newNode = new Node;
 	Node* newNodeSplited = nullptr;
 	Node* temp = nullptr;
@@ -81,7 +77,7 @@ CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 	time_t oldStart = NULL;
 	bool inserted = false;
 	newNode->setEvent(eventToInsert);//Put in the root's middle.
-	if (this->isEmpty())
+	if (this->isEmpty())//First node in the tree
 	{
 		temp = treeRoot->getMiddle();
 		temp->setMiddle(newNode);
@@ -117,46 +113,38 @@ CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 		CalendarEvent* checkExistsEvent = eventAt(eventToInsert->getStartTime());
 		if (checkExistsEvent)//checking if there is no other event at the same time.
 			if (checkExistsEvent->getDuration() + checkExistsEvent->getStartTime() != eventToInsert->getStartTime())
-			{
-				check++;
 				return nullptr;
-			}
+		
 		CalendarEvent* checkExistsEventAfter = eventAfter(eventToInsert->getStartTime());
-		if (checkExistsEventAfter)
+		if (checkExistsEventAfter)//Checking that the new event doesn't hit with the after event
 			if (eventToInsert->getStartTime() + eventToInsert->getDuration() > checkExistsEventAfter->getStartTime())
-			{
-				check++;
-					return nullptr;
-			}
-		parent = parent->findParent(timeToInsert, treeRoot->getMiddle());
-		firstParent = parent;
+				return nullptr;
+			
+		parent = parent->findParent(timeToInsert, treeRoot->getMiddle());//Pulling the right Node the new leaf should be inserted to.
+		firstParent = parent;//Getting the Node's parent in case we need to split it.
 		if (!temp->insert(newNode, parent)) // Need to split node
 		{
 			while (!inserted)
 			{
-				newNodeSplited = temp->splitNodes(parent, newNode);
-				temp->updateIndex(parent);
-				if (parent != parent->getParent())
+				newNodeSplited = temp->splitNodes(parent, newNode);//Splitting nodes
+				temp->updateIndex(parent);//Updating index after we splited the nodes.
+				if (parent != parent->getParent())//the new splited node should be inserted to the father of the node.
 					parent = parent->getParent();
 				else//Need to create new root
 				{
-					treeRoot->setMiddle(temp->newRoot(parent, newNodeSplited));
+					treeRoot->setMiddle(temp->newRoot(parent, newNodeSplited));//Creating new root
 					return eventToInsert;
 				}
-				if (temp->insert(newNodeSplited, parent))
+				if (temp->insert(newNodeSplited, parent))//Inserting new splited node.
 					inserted = true;
 				else
-					newNode = newNodeSplited;
+					newNode = newNodeSplited;//Need to split parent as well.
 			}
 		}
-		temp->updateIndex(firstParent);
+		temp->updateIndex(firstParent); //Updating indexes.
 		return eventToInsert;
 	}
 	return nullptr;
-}
-
-void CalendarTree::recInsert(Node * newNode, Node * parent)
-{
 }
 
 

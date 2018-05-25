@@ -6,7 +6,7 @@ class CalendarTree {
 	Node* treeRoot;
 public:
 	CalendarTree() {
-		makeEmpty();//We use dummy head - our real tree starts from the middly of the dummy head
+		makeEmpty();//We use dummy head - our real tree starts from the middle of the dummy head
 		treeRoot->setMiddle(new Node);
 	}
 	void makeEmpty() {
@@ -18,7 +18,6 @@ public:
 	CalendarEvent* eventAt(time_t time);
 	CalendarEvent* eventAfter(time_t time);
 	CalendarEvent* insert(CalendarEvent* eventToInsert);
-	void recInsert(Node* newNode,Node* parent);
 	CalendarEvent* deleteFirst();
 	void printSorted();
 	void organize2ChildrenLeftInNode(Node* parent);
