@@ -46,12 +46,11 @@ int Node::numberOfChildren()
 	int res = 0;
 
 	if (this->getRight() != nullptr)
-		res = 3;
-
-	else if (this->getMiddle() != nullptr)
-		res = 2;
-	else
-		res = 1;
+		res++;
+	if (this->getMiddle() != nullptr)
+		res++;
+	if (this->getLeft() != nullptr)
+		res++;
 
 	return res;
 
@@ -138,14 +137,13 @@ Node * Node::newRoot(Node * first, Node * second)
 		newRoot->left = second;
 	}
 	first->parent = second->parent = newRoot;
-	newRoot->parent = newRoot;
 	return newRoot;
 }
 
-void Node::updateIndex(Node * newNode)
+void Node::updateIndex(Node * newNode,Node* treeRoot)
 {
 	Node* temp = newNode;
-	Node* parent = newNode->parent;
+//	Node* parent = newNode->parent;
 	do
 	{
 		if (!temp->isLeaf())
@@ -155,13 +153,13 @@ void Node::updateIndex(Node * newNode)
 			if (temp->min3 != 0)
 				temp->min3 = findMin(temp->right);
 		}
-		temp = parent;
-		parent = parent->parent; 
-	} while (temp != parent);
-	parent->min1 = findMin(parent->left);
-	parent->min2 = findMin(parent->middle);
-	if (parent->min3 != 0)
-		parent->min3 = findMin(parent->right);
+		temp =temp-> parent;
+//		parent = parent->parent; 
+	} while (temp != treeRoot);
+	//parent->min1 = findMin(parent->left);
+	//parent->min2 = findMin(parent->middle);
+	//if (parent->min3 != 0)
+	//	parent->min3 = findMin(parent->right);
 }
 
 time_t Node::findMin(Node * nodeToSearch)
@@ -231,8 +229,7 @@ bool Node::insert(Node * newNode, Node * parentNode)
 }
 
 bool Node::isLeaf()
-{
-
+{	
 	if (this->min1 == 0 && this->min2 == 0 && this->min3 == 0)
 	{
 		return true;

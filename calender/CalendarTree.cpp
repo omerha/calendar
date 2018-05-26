@@ -4,65 +4,71 @@ CalendarEvent * CalendarTree::eventAt(time_t time)
 {
 	Node* temp = treeRoot->getMiddle();//getting the tree's root
 	CalendarEvent* tempEvent;
-	while(!temp->isLeaf())//going down the tree
+	if (!this->isEmpty())
 	{
-		if (temp->getMin2() > time)//case key is lower than min2 we go left.
-			temp = temp->getLeft();
-		else if (temp->getMin2() <= time)
+		while (!temp->isLeaf())//going down the tree
 		{
-			if (temp->getMin3() != NULL)//In case key is higher than min 2 we check if min3 exists and choose to go middle or right.
+			if (temp->getMin2() > time)//case key is lower than min2 we go left.
+				temp = temp->getLeft();
+			else if (temp->getMin2() <= time)
 			{
-				if (time < temp->getMin3())
-					temp = temp->getMiddle();
+				if (temp->getMin3() != NULL)//In case key is higher than min 2 we check if min3 exists and choose to go middle or right.
+				{
+					if (time < temp->getMin3())
+						temp = temp->getMiddle();
+					else
+						temp = temp->getRight();
+				}
 				else
-					temp = temp->getRight();
+					temp = temp->getMiddle();
 			}
-			else
-				temp = temp->getMiddle();
-		}	
+		}
+		tempEvent = temp->getEvent();
+		if (tempEvent->getStartTime() <= time && time <= (tempEvent->getStartTime() + tempEvent->getDuration()))//Checking if the event is during the requested time.
+			return tempEvent;
 	}
-	tempEvent = temp->getEvent();
-	if (tempEvent->getStartTime() <= time && time <= (tempEvent->getStartTime() + tempEvent->getDuration()))//Checking if the event is during the requested time.
-		return tempEvent;
 	return nullptr;
 }
 
 CalendarEvent * CalendarTree::eventAfter(time_t time)
 {
-	Node* leafParent = nullptr;
-	bool found = false;
-	Node* temp = nullptr;
-	leafParent = treeRoot->getMiddle()->findParent(time, treeRoot->getMiddle());//Looking for the node the event would have been, than we will search for the higher key.
-	if (leafParent->getLeft()->getEvent()->getStartTime() >= time)
-		return leafParent->getLeft()->getEvent();
-	else if (leafParent->getLeft()->getEvent()->getStartTime() <= time)
+	if (!this->isEmpty())
 	{
-		if (leafParent->getMiddle()->getEvent()->getStartTime() <= time)
+		Node* leafParent = nullptr;
+		bool found = false;
+		Node* temp = nullptr;
+		leafParent = treeRoot->getMiddle()->findParent(time, treeRoot->getMiddle());//Looking for the node the event would have been, than we will search for the higher key.
+		if (leafParent->getLeft()->getEvent()->getStartTime() >= time)
+			return leafParent->getLeft()->getEvent();
+		else if (leafParent->getLeft()->getEvent()->getStartTime() <= time)
 		{
-			if (leafParent->getMiddle()->getEvent()->getStartTime() == time)
+			if (leafParent->getMiddle()->getEvent()->getStartTime() <= time)
+			{
+				if (leafParent->getMiddle()->getEvent()->getStartTime() == time)
+					return leafParent->getMiddle()->getEvent();
+				else if (leafParent->getRight() != NULL)
+					if (leafParent->getRight()->getEvent()->getStartTime() > time)
+						return leafParent->getRight()->getEvent();
+			}
+			else
 				return leafParent->getMiddle()->getEvent();
-			else if (leafParent->getRight() != NULL)
-				if (leafParent->getRight()->getEvent()->getStartTime() > time)
-					return leafParent->getRight()->getEvent();
 		}
-		else 
-			return leafParent->getMiddle()->getEvent();
-	}
-	//assuming the afterevent is in the right leaf or in the right node
-	temp = leafParent->getParent();
-	while (!found)
-	{
-		if (temp->getLeft() == leafParent)
-			return eventAt(temp->getMiddle()->getMin1());
-		else if (temp->getMiddle() == leafParent)
-		{
-			if (temp->getRight() != NULL)
-				return eventAt(temp->getRight()->getMin1());
-		}
-		leafParent = temp;
+		//assuming the afterevent is in the right leaf or in the right node
 		temp = leafParent->getParent();
-		if (temp == leafParent)//we are looking in the root and there is no right event
-			found = true;
+		while (!found)
+		{
+			if (temp->getLeft() == leafParent)
+				return eventAt(temp->getMiddle()->getMin1());
+			else if (temp->getMiddle() == leafParent)
+			{
+				if (temp->getRight() != NULL)
+					return eventAt(temp->getRight()->getMin1());
+			}
+			leafParent = temp;
+			temp = leafParent->getParent();
+			if (temp == treeRoot || leafParent == treeRoot)//we are looking in the root and there is no right event
+				found = true;
+		}
 	}
 	return nullptr;
 }
@@ -81,7 +87,7 @@ CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 	{
 		temp = treeRoot->getMiddle();
 		temp->setMiddle(newNode);
-		temp->setParent(temp);//Root's parent is root
+		temp->setParent(treeRoot);//Root's parent is root
 		newNode->setParent(temp);
 		return eventToInsert;
 	}
@@ -127,12 +133,13 @@ CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 			while (!inserted)
 			{
 				newNodeSplited = temp->splitNodes(parent, newNode);//Splitting nodes
-				temp->updateIndex(parent);//Updating index after we splited the nodes.
-				if (parent != parent->getParent())//the new splited node should be inserted to the father of the node.
+				temp->updateIndex(parent,treeRoot);//Updating index after we splited the nodes.
+				if (parent->getParent()!=treeRoot)//the new splited node should be inserted to the father of the node.
 					parent = parent->getParent();
 				else//Need to create new root
 				{
 					treeRoot->setMiddle(temp->newRoot(parent, newNodeSplited));//Creating new root
+					treeRoot->getMiddle()->setParent(treeRoot);
 					return eventToInsert;
 				}
 				if (temp->insert(newNodeSplited, parent))//Inserting new splited node.
@@ -141,7 +148,7 @@ CalendarEvent* CalendarTree::insert(CalendarEvent* eventToInsert)
 					newNode = newNodeSplited;//Need to split parent as well.
 			}
 		}
-		temp->updateIndex(firstParent); //Updating indexes.
+		temp->updateIndex(firstParent,treeRoot); //Updating indexes.
 		return eventToInsert;
 	}
 	return nullptr;
@@ -177,19 +184,26 @@ CalendarEvent* CalendarTree::deleteFirst()
 		{
 			if (parent == treeRoot->getMiddle())
 			{
-				if (!parent->getMiddle()->isLeaf())
+				if (!this->isEmpty())
 				{
-					treeRoot->setMiddle(parent->getMiddle());
-					free(parent);
-					treeRoot->updateTheNewParentForChildren();
+					if (!parent->getMiddle()->isLeaf())
+					{
+						treeRoot->setMiddle(parent->getMiddle());
+						free(parent);
+						treeRoot->updateTheNewParentForChildren();
 
+					}
+					else//in case the middle sub tree of the root is leaf we need to set the middle child to be left child
+					{
+						parent->setLeft(parent->getMiddle());
+						parent->setMiddle(nullptr);
+					}
+				}
+				else
+				{
+					this->makeEmpty();
 				}
 
-				else//in case the middle sub tree of the root is leaf we need to set the middle child to be left child
-				{
-					parent->setLeft(parent->getMiddle());
-					parent->setMiddle(nullptr);
-				}
 			}
 
 			else if (parent->getParent()->getMiddle()->numberOfChildren() == 3)//in case the cosin have 3 children
@@ -245,6 +259,7 @@ void CalendarTree::deliverLeftChildOfCosinAndUpdateMin(Node * parent)
 	Node * nodeThatGetNewChild = parent;
 	Node * cosin = parent->getParent()->getMiddle();
 	Node*ChildToTake = cosin->getLeft();
+	cosin->setLeft(nullptr);
 
 	nodeThatGetNewChild->setRight(ChildToTake);
 
@@ -279,7 +294,7 @@ void CalendarTree::updateMinUpTo(Node * node)
 {
 	while (node != treeRoot)//if there is no function "get parent", need to change it 
 	{
-		if (node->getLeft()->isLeaf())
+		if (node->getLeft() != nullptr&&node->getLeft()->isLeaf())
 		{
 			if (node->getLeft())
 				node->setMin1(node->getLeft()->getEvent()->getStartTime());
@@ -304,7 +319,8 @@ void CalendarTree::updateMinUpTo(Node * node)
 
 void CalendarTree::printSorted()
 {
-	treeRoot->print(treeRoot->getMiddle());
+	if (!this->isEmpty())
+		treeRoot->print(treeRoot->getMiddle());
 }
 
 int CalendarTree::numBefore(time_t time)

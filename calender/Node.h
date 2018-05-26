@@ -37,7 +37,7 @@ public:
 	Node* findParent(time_t time,Node* root);
 	Node* splitNodes(Node* fullNode, Node* newNode);
 	Node* newRoot(Node* first, Node* second);
-	void updateIndex(Node* newNode);
+	void updateIndex(Node* newNode,Node* treeRoot);
 	time_t findMin(Node* nodeToSearch);
 	void print(Node* nodeToPrint);
 	int  numberOfChildren();
