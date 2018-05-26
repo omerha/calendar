@@ -239,3 +239,14 @@ bool Node::isLeaf()
 	}
 	return false;
 }
+void Node::updateTheNewParentForChildren()
+{
+	if (this->getLeft())
+		this->getLeft()->setParent(this);
+
+	if (this->getMiddle())
+		this->getMiddle()->setParent(this);
+
+	if (this->getRight())
+		this->getRight()->setParent(this);
+}

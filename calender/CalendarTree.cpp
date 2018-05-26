@@ -163,40 +163,46 @@ CalendarEvent* CalendarTree::deleteFirst()
 		}
 
 		res = child->getEvent();
-		free(child);
 		parent->setLeft(nullptr);
+		free(child);
 
 		if (parent->numberOfChildren() == 2)
 		{
 			organize2ChildrenLeftInNode(parent);//only update min 2,3. the removed node allways will be the left. 
-												//so only min 2 bacome min 3	
+			updateMinUpTo(parent);									//so only min 2 bacome min 3	
+																	//update min up
 		}
 
 		else//left 1 children
 		{
-			if (parent == treeRoot)
+			if (parent == treeRoot->getMiddle())
 			{
 				if (!parent->getMiddle()->isLeaf())
 				{
-					treeRoot = parent->getMiddle();
+					treeRoot->setMiddle(parent->getMiddle());
 					free(parent);
+					treeRoot->updateTheNewParentForChildren();
+
 				}
 
-				else//in case the middle sub tree in the middle of the root is leaf we need to set the middle child to be left child
+				else//in case the middle sub tree of the root is leaf we need to set the middle child to be left child
 				{
 					parent->setLeft(parent->getMiddle());
 					parent->setMiddle(nullptr);
 				}
 			}
+
 			else if (parent->getParent()->getMiddle()->numberOfChildren() == 3)//in case the cosin have 3 children
 			{
 				deliverLeftChildOfCosinAndUpdateMin(parent);//deliver the left child of cosin and update min 2,3
+				parent->updateTheNewParentForChildren();
 				updateMinUpTo(parent);
 			}
 
-			else
+			else//cosin have 2 child
 			{
-				deliverChildToCosinAndUpdateMin(child);//*TODO* maybe we need also min 1 
+				deliverChildToCosinAndUpdateMin(parent);//*TODO* maybe we need also min 1 
+				parent->getParent()->getMiddle()->updateTheNewParentForChildren();//update the new child that his parent now is the cosin
 				parent->setMiddle(nullptr);
 				deleteFirst();
 			}
@@ -213,7 +219,7 @@ void CalendarTree::organize2ChildrenLeftInNode(Node* parent)
 		parent->setMiddle(parent->getRight());
 		parent->setMin1(parent->getMin2());
 		parent->setMin2(parent->getMin3());
-		parent->setMin3(-1);
+		parent->setMin3(0);
 
 	}
 
@@ -221,16 +227,18 @@ void CalendarTree::organize2ChildrenLeftInNode(Node* parent)
 	{
 		parent->setMiddle(parent->getRight());
 		parent->setMin2(parent->getMin3());
-		parent->setMin3(-1);
+		parent->setMin3(0);
 	}
 
 	else
 	{
-		parent->setMin3(-1);
+		parent->setMin3(0);
 	}
 
 	parent->setRight(nullptr);
+	parent->setMin3(0);
 }
+
 
 void CalendarTree::deliverLeftChildOfCosinAndUpdateMin(Node * parent)
 {
@@ -240,39 +248,56 @@ void CalendarTree::deliverLeftChildOfCosinAndUpdateMin(Node * parent)
 
 	nodeThatGetNewChild->setRight(ChildToTake);
 
-
 	organize2ChildrenLeftInNode(cosin);
 	organize2ChildrenLeftInNode(nodeThatGetNewChild);
 }
 
 
 
-void CalendarTree::deliverChildToCosinAndUpdateMin(Node*child)
-{
-	Node*parent = child->getParent();
-	Node*cosin = parent->getMiddle();
+void CalendarTree::deliverChildToCosinAndUpdateMin(Node*parent)//in case the cosin have 2 children we deliver 
+{																//the 1 childre  that lefet from parent to cosin	
+	Node*cosin = parent->getParent()->getMiddle();
 
 	cosin->setMin3(cosin->getMin2());
 	cosin->setMin2(cosin->getMin1());
 	cosin->setRight(cosin->getMiddle());
 	cosin->setMiddle(cosin->getLeft());
-	cosin->setLeft(child);
+	cosin->setLeft(parent->getMiddle());
 
-	if (child->isLeaf())
-		cosin->setMin1(child->getEvent()->getStartTime());
 
+
+	if (parent->getMiddle()->isLeaf())
+		cosin->setMin1(parent->getMiddle()->getEvent()->getStartTime());
 	else
-		cosin->setMin1(child->getMin1());
+		cosin->setMin1(parent->getMiddle()->getMin1());
+
+	parent->setMin1(0);
+	parent->setMin2(0);
 }
 
 void CalendarTree::updateMinUpTo(Node * node)
 {
-	while (node != nullptr)//if there is no function "get parent", need to change it 
+	while (node != treeRoot)//if there is no function "get parent", need to change it 
 	{
-		node->setMin1(node->getLeft()->getMin1());
-		node->setMin2(node->getMiddle()->getMin1());
-		node->setMin3(node->getRight()->getMin1());
+		if (node->getLeft()->isLeaf())
+		{
+			if (node->getLeft())
+				node->setMin1(node->getLeft()->getEvent()->getStartTime());
+			if (node->getMiddle())
+				node->setMin2(node->getMiddle()->getEvent()->getStartTime());
+			if (node->getRight())
+				node->setMin3(node->getRight()->getEvent()->getStartTime());
+		}
 
+		else
+		{
+			if (node->getLeft())
+				node->setMin1(node->getLeft()->getMin1());
+			if (node->getMiddle())
+				node->setMin2(node->getMiddle()->getMin1());
+			if (node->getRight())
+				node->setMin3(node->getRight()->getMin1());
+		}
 		node = node->getParent();
 	}
 }

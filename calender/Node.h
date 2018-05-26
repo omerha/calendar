@@ -47,4 +47,5 @@ public:
 	bool insert(Node* newNode,Node* parentNode);
 	//void delete();
 	bool isLeaf();
+	void updateTheNewParentForChildren();
 };
